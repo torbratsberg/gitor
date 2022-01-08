@@ -16,6 +16,25 @@ import (
 	"github.com/go-yaml/yaml"
 )
 
+type Repo struct {
+	Name     string
+	Branches []string
+	Remotes  []string
+}
+
+type ServerConfig struct {
+	Paths struct {
+		Repositories string `yaml:repositories`
+	}
+	Server struct {
+		Port           string   `yaml:port`
+		TokenWhitelist []string `yaml:tokenWhitelist`
+		SSHPort        string   `yaml:sshPort`
+		Address        string   `yaml:address`
+		User           string   `yaml:user`
+	}
+}
+
 // Returns the users home directory
 func getHomeDir() string {
 	homeDir, err := os.UserHomeDir()
@@ -26,23 +45,13 @@ func getHomeDir() string {
 
 var configScriptsFilePath string = path.Join(getHomeDir(), "/.config/gitor/server-config.yml")
 
-type ServerConfig struct {
-	Paths struct {
-		Repositories string `yaml:repositories`
-	}
-	Server struct {
-		Port           string   `yaml:port`
-		TokenWhitelist []string `yaml:tokenWhitelist`
-	}
-}
-
 func check(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func getConfig() (cfg ServerConfig) {
+func getConfig() (cfg *ServerConfig) {
 	f, err := os.Open(configScriptsFilePath)
 	check(err)
 	defer f.Close()
@@ -56,8 +65,10 @@ func getConfig() (cfg ServerConfig) {
 	return
 }
 
+var gitorConfig ServerConfig = *getConfig()
+
 func validateToken(token string) bool {
-	tokenWhiteList := getConfig().Server.TokenWhitelist
+	tokenWhiteList := gitorConfig.Server.TokenWhitelist
 	decodedToken, err := base64.StdEncoding.DecodeString(token)
 	check(err)
 
@@ -77,15 +88,22 @@ func getRepositories(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	search := req.URL.Query().Get("search")
 	// Find all the git repos
-	dirs, err := os.ReadDir(getConfig().Paths.Repositories)
+	dirs, err := os.ReadDir(gitorConfig.Paths.Repositories)
 	check(err)
 
 	// Make a list of all the name of the git repos
 	var data []string
 	for i := range dirs {
 		if dirs[i].IsDir() {
-			data = append(data, dirs[i].Name())
+			if search != "" {
+				if strings.Contains(dirs[i].Name(), search) {
+					data = append(data, dirs[i].Name())
+				}
+			} else {
+				data = append(data, dirs[i].Name())
+			}
 		}
 	}
 
@@ -93,16 +111,22 @@ func getRepositories(res http.ResponseWriter, req *http.Request) {
 	encode.Encode(data)
 }
 
-type Repo struct {
-	Name     string
-	Branches []string
-	Remotes  []string
-}
-
 func getRepository(res http.ResponseWriter, req *http.Request) {
+	if !validateToken(req.Header.Get("Authorization")) {
+		res.WriteHeader(http.StatusUnauthorized)
+		res.Write([]byte("401 Unauthorized"))
+		return
+	}
 
 	repoName := req.URL.Query().Get("repoName")
-	repoPath := path.Join(getConfig().Paths.Repositories, repoName)
+	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName)
+
+	// Check if the directory exists and is a repo
+	if _, err := os.Stat(path.Join(repoPath, "/.git")); os.IsNotExist(err) {
+		res.WriteHeader(http.StatusNotFound)
+		res.Write([]byte("404 Not Found"))
+		return
+	}
 
 	var repoRes = &Repo{
 		Name: repoName,
@@ -134,11 +158,30 @@ func getRepository(res http.ResponseWriter, req *http.Request) {
 }
 
 func newRepository(res http.ResponseWriter, req *http.Request) {
+	if !validateToken(req.Header.Get("Authorization")) {
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write([]byte("401 Unauthorized"))
+		return
+	}
+
 	repoName := req.URL.Query().Get("repoName")
 
-	gitorConfig := getConfig()
 	repo, err := git.PlainInit(path.Join(gitorConfig.Paths.Repositories, repoName), true)
 	check(err)
+
+	repo.CreateRemote(&config.RemoteConfig{
+		Name: "origin",
+		URLs: []string{
+			fmt.Sprintf(
+				"ssh://%s@%s:%s%s",
+				gitorConfig.Server.User,
+				gitorConfig.Server.Address,
+				gitorConfig.Server.SSHPort,
+				gitorConfig.Paths.Repositories,
+			),
+		},
+		Fetch: []config.RefSpec{},
+	})
 
 	err = repo.CreateBranch(&config.Branch{
 		Name:   repoName,
@@ -153,8 +196,6 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	gitorConfig := getConfig()
-
 	http.HandleFunc("/get_repositories", getRepositories)
 	http.HandleFunc("/get_repository", getRepository)
 	http.HandleFunc("/new_repository", newRepository)

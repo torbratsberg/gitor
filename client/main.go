@@ -15,6 +15,12 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var client = &http.Client{
+	Transport:     nil,
+	CheckRedirect: nil,
+	Jar:           nil,
+}
+
 var colorReset string = "\033[0m"
 var colorGreen string = "\033[32m"
 var colorYellow string = "\033[33m"
@@ -105,6 +111,30 @@ func encodeToken() string {
 	)
 }
 
+func requestAndParse(req *http.Request) []byte {
+	res, err := client.Do(req)
+	check(err)
+
+	if res.StatusCode != 200 {
+		switch res.StatusCode {
+		case 401:
+			fmt.Println("Unauthorized")
+			os.Exit(1)
+		case 404:
+			fmt.Println("Not found")
+			os.Exit(1)
+		default:
+			fmt.Println("Unknown error")
+			os.Exit(1)
+		}
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	check(err)
+
+	return body
+}
+
 func getRepositories(search string) (result []string) {
 	url := fmt.Sprintf(
 		"http://%s:%s/%s",
@@ -117,20 +147,11 @@ func getRepositories(search string) (result []string) {
 		url += fmt.Sprintf("?search=%s", search)
 	}
 
-	client := &http.Client{
-		Transport:     nil,
-		CheckRedirect: nil,
-		Jar:           nil,
-	}
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", encodeToken())
 	check(err)
 
-	res, err := client.Do(req)
-	check(err)
-
-	body, err := ioutil.ReadAll(res.Body)
-	check(err)
+	body := requestAndParse(req)
 
 	err = json.Unmarshal(body, &result)
 	check(err)
@@ -147,10 +168,11 @@ func getRepository(repoName string) (result Repo) {
 		"get_repository",
 		fmt.Sprintf("repoName=%s", repoName),
 	)
-	res, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Add("Authorization", encodeToken())
 	check(err)
 
-	body, err := ioutil.ReadAll(res.Body)
+	body := requestAndParse(req)
 
 	err = json.Unmarshal(body, &result)
 	check(err)
@@ -166,11 +188,11 @@ func newRepository(repoName string) (result Repo) {
 		"new_repository",
 		fmt.Sprintf("repoName=%s", repoName),
 	)
-
-	res, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Add("Authorization", encodeToken())
 	check(err)
 
-	body, err := ioutil.ReadAll(res.Body)
+	body := requestAndParse(req)
 
 	err = json.Unmarshal(body, &result)
 	check(err)
@@ -182,8 +204,10 @@ func main() {
 	var search string
 
 	app := &cli.App{
-		Name:  "Gitor",
-		Usage: "Git repo manager",
+		Name:        "Gitor",
+		Usage:       "Git repo manager",
+		Version:     "0.1.0",
+		Description: "CLI Tool to manage your bare repos on a remote server.",
 		Before: func(c *cli.Context) (err error) {
 			// Add some space above our output
 			fmt.Printf("\n")
