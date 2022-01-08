@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/go-yaml/yaml"
@@ -273,7 +274,14 @@ func main() {
 					for i := range repos {
 						fmt.Printf(strings.Repeat(" ", 2))
 						fmt.Printf(colorCyan)
-						fmt.Println(repos[i])
+
+						// Regex away the .git suffix
+						fmt.Println(
+							regexp.MustCompile(`\.git$`).ReplaceAllString(
+								repos[i],
+								"",
+							),
+						)
 					}
 					fmt.Printf(colorReset)
 					return

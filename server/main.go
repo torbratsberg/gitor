@@ -122,7 +122,7 @@ func getRepository(res http.ResponseWriter, req *http.Request) {
 	}
 
 	repoName := req.URL.Query().Get("repoName")
-	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName)
+	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName+".git")
 
 	// Check if the directory exists
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
@@ -230,7 +230,7 @@ func deleteRepository(res http.ResponseWriter, req *http.Request) {
 	}
 
 	repoName := req.URL.Query().Get("repoName")
-	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName)
+	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName+".git")
 
 	// Check if exists
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
