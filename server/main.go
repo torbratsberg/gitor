@@ -166,7 +166,10 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 
 	repoName := req.URL.Query().Get("repoName")
 
-	repo, err := git.PlainInit(path.Join(gitorConfig.Paths.Repositories, repoName+".git"), true)
+	repo, err := git.PlainInit(
+		path.Join(gitorConfig.Paths.Repositories, repoName+".git"),
+		true,
+	)
 	check(err)
 
 	repo.CreateRemote(&config.RemoteConfig{
@@ -177,7 +180,7 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 				gitorConfig.Server.User,
 				gitorConfig.Server.Address,
 				gitorConfig.Server.SSHPort,
-				gitorConfig.Paths.Repositories,
+				path.Join(gitorConfig.Paths.Repositories, repoName+".git"),
 			),
 		},
 		Fetch: []config.RefSpec{},
