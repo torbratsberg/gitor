@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 
@@ -194,12 +195,19 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 	})
 	check(err)
 
-	// Chown the repo so we can push to it
-	err = os.Chown(
-		path.Join(gitorConfig.Paths.Repositories, repoName+".git"),
-		os.Getuid(),
-		os.Getgid(),
+	// Run bash command
+	cmd := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf(
+			"chown -R %s:%s %s",
+			gitorConfig.Server.User,
+			gitorConfig.Server.User,
+			path.Join(gitorConfig.Paths.Repositories, repoName+".git"),
+		),
 	)
+	err = cmd.Run()
+	check(err)
 
 	// Add the remote to repoRes
 	remoteString := remote.String()
