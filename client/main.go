@@ -225,6 +225,9 @@ func deleteRepository(repoName string) (result string) {
 	body := requestAndParse(req)
 	result = string(body)
 
+	err = json.Unmarshal(body, &result)
+	check(err)
+
 	return result
 }
 
