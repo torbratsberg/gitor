@@ -73,6 +73,7 @@ func validateToken(token string) bool {
 	decodedToken, err := base64.StdEncoding.DecodeString(token)
 	check(err)
 
+	// Check if the decode token is in the whitelist
 	for i := range tokenWhiteList {
 		if string(decodedToken) == tokenWhiteList[i] {
 			return true
@@ -90,6 +91,7 @@ func getRepositories(res http.ResponseWriter, req *http.Request) {
 	}
 
 	search := req.URL.Query().Get("search")
+
 	// Find all the git repos
 	dirs, err := os.ReadDir(gitorConfig.Paths.Repositories)
 	check(err)
@@ -133,6 +135,7 @@ func getRepository(res http.ResponseWriter, req *http.Request) {
 		Name: repoName,
 	}
 
+	// Open the repo so we can inspect it
 	repo, err := git.PlainOpen(repoPath)
 	check(err)
 
@@ -195,7 +198,8 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 	})
 	check(err)
 
-	// Run bash command
+	// Chown the repo
+	// TODO: Can we avoid this?
 	cmd := exec.Command(
 		"bash",
 		"-c",
@@ -227,9 +231,8 @@ func deleteRepository(res http.ResponseWriter, req *http.Request) {
 
 	repoName := req.URL.Query().Get("repoName")
 	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName)
-	fmt.Println(repoName)
 
-	// TODO: Check if exists and delete it
+	// Check if exists
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
 		res.WriteHeader(http.StatusNotFound)
 		res.Write([]byte("404 Not Found"))
@@ -239,6 +242,7 @@ func deleteRepository(res http.ResponseWriter, req *http.Request) {
 	// Delete the directory
 	err := os.RemoveAll(repoPath)
 
+	// Check if everything went well
 	if err == nil {
 		encode := json.NewEncoder(res)
 		encode.Encode(fmt.Sprintf("%s Has been deleted", repoName))

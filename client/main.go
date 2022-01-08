@@ -80,14 +80,17 @@ func getConfig() (cfg *ClientConfig) {
 var gitorConfig ClientConfig = *getConfig()
 
 func printRepoInfo(repo Repo) {
+	// Print repo name
 	fmt.Printf("%s%s\n", colorGreen, repo.Name)
 
+	// Print branches
 	fmt.Printf("\n%s%sBranches:\n", colorYellow, strings.Repeat(" ", 2))
 	for i := range repo.Branches {
 		fmt.Printf(colorCyan)
 		fmt.Printf("    %s\n", repo.Branches[i])
 	}
 
+	// Print remotes
 	fmt.Printf("\n%s%sRemotes:\n", colorYellow, strings.Repeat(" ", 2))
 	for i := range repo.Remotes {
 		fmt.Printf(colorCyan)
@@ -112,9 +115,11 @@ func encodeToken() string {
 }
 
 func requestAndParse(req *http.Request) []byte {
+	// Do the request
 	res, err := client.Do(req)
 	check(err)
 
+	// Check and handle response status code
 	if res.StatusCode != 200 {
 		switch res.StatusCode {
 		case 401:
@@ -132,6 +137,7 @@ func requestAndParse(req *http.Request) []byte {
 		}
 	}
 
+	// Read the body
 	body, err := ioutil.ReadAll(res.Body)
 	check(err)
 
@@ -204,6 +210,7 @@ func newRepository(repoName string) (result Repo) {
 }
 
 func deleteRepository(repoName string) (result string) {
+	// Check if we really want to delete the repo
 	var consent string
 	fmt.Printf("Are you sure you want to delete %s? [y/n]\n", repoName)
 	fmt.Scanf("%s", &consent)
@@ -273,9 +280,9 @@ func main() {
 				},
 			},
 			{
-				Name:    "repo",
-				Aliases: []string{"r"},
-				Usage:   "View a specific repo",
+				Name: "repo",
+				// Aliases: []string{""},
+				Usage: "View a specific repo",
 				Action: func(c *cli.Context) (err error) {
 					repoName := c.Args().First()
 					if repoName == "" {
@@ -290,9 +297,9 @@ func main() {
 				},
 			},
 			{
-				Name:    "new",
-				Aliases: []string{"n"},
-				Usage:   "Create a new repo",
+				Name: "new",
+				// Aliases: []string{""},
+				Usage: "Create a new repo",
 				Action: func(c *cli.Context) (err error) {
 					repoName := c.Args().First()
 					if repoName == "" {
@@ -308,7 +315,7 @@ func main() {
 			},
 			{
 				Name:    "delete",
-				Aliases: []string{"d"},
+				Aliases: []string{"rm"},
 				Usage:   "Delete a repo",
 				Action: func(c *cli.Context) (err error) {
 					repoName := c.Args().First()
