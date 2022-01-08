@@ -121,7 +121,7 @@ func getRepository(res http.ResponseWriter, req *http.Request) {
 	repoName := req.URL.Query().Get("repoName")
 	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName)
 
-	// Check if the directory exists and is a repo
+	// Check if the directory exists
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
 		res.WriteHeader(http.StatusNotFound)
 		res.Write([]byte("404 Not Found"))
@@ -172,7 +172,12 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 	)
 	check(err)
 
-	repo.CreateRemote(&config.RemoteConfig{
+	repoRes := Repo{
+		Name:     repoName,
+		Branches: []string{},
+	}
+
+	remote, err := repo.CreateRemote(&config.RemoteConfig{
 		Name: "origin",
 		URLs: []string{
 			fmt.Sprintf(
@@ -185,23 +190,52 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 		},
 		Fetch: []config.RefSpec{},
 	})
-
-	err = repo.CreateBranch(&config.Branch{
-		Name:   repoName,
-		Remote: "",
-		Merge:  "",
-		Rebase: "",
-	})
 	check(err)
 
+	remoteString := remote.String()
+	remoteList := strings.Split(remoteString, "\n")
+	repoRes.Remotes = append(repoRes.Remotes, remoteList...)
+
 	encode := json.NewEncoder(res)
-	encode.Encode(repo)
+	encode.Encode(repoRes)
+}
+
+func deleteRepository(res http.ResponseWriter, req *http.Request) {
+	if !validateToken(req.Header.Get("Authorization")) {
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write([]byte("401 Unauthorized"))
+		return
+	}
+
+	repoName := req.URL.Query().Get("repoName")
+	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName)
+	fmt.Println(repoName)
+
+	// TODO: Check if exists and delete it
+	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
+		res.WriteHeader(http.StatusNotFound)
+		res.Write([]byte("404 Not Found"))
+		return
+	}
+
+	// Delete the directory
+	err := os.RemoveAll(repoPath)
+
+	if err == nil {
+		encode := json.NewEncoder(res)
+		encode.Encode(fmt.Sprintf("%s Has been deleted", repoName))
+	} else {
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write([]byte("500 Something went wrong"))
+		return
+	}
 }
 
 func main() {
 	http.HandleFunc("/get_repositories", getRepositories)
 	http.HandleFunc("/get_repository", getRepository)
 	http.HandleFunc("/new_repository", newRepository)
+	http.HandleFunc("/delete_repository", deleteRepository)
 
 	http.ListenAndServe(fmt.Sprintf(":%s", gitorConfig.Server.Port), nil)
 }

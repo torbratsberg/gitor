@@ -123,6 +123,9 @@ func requestAndParse(req *http.Request) []byte {
 		case 404:
 			fmt.Println("Not found")
 			os.Exit(1)
+		case 500:
+			fmt.Println("Internal server error")
+			os.Exit(1)
 		default:
 			fmt.Println("Unknown error")
 			os.Exit(1)
@@ -200,6 +203,31 @@ func newRepository(repoName string) (result Repo) {
 	return
 }
 
+func deleteRepository(repoName string) (result string) {
+	var consent string
+	fmt.Printf("Are you sure you want to delete %s? [y/n]\n", repoName)
+	fmt.Scanf("%s", &consent)
+	if consent != "y" {
+		return "Aborted"
+	}
+
+	url := fmt.Sprintf(
+		"http://%s:%s/%s?%s",
+		gitorConfig.RemoteServer.IP,
+		gitorConfig.RemoteServer.Port,
+		"delete_repository",
+		fmt.Sprintf("repoName=%s", repoName),
+	)
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Add("Authorization", encodeToken())
+	check(err)
+
+	body := requestAndParse(req)
+	result = string(body)
+
+	return result
+}
+
 func main() {
 	var search string
 
@@ -271,6 +299,23 @@ func main() {
 
 					repo := newRepository(repoName)
 					printRepoInfo(repo)
+
+					return
+				},
+			},
+			{
+				Name:    "delete",
+				Aliases: []string{"d"},
+				Usage:   "Delete a repo",
+				Action: func(c *cli.Context) (err error) {
+					repoName := c.Args().First()
+					if repoName == "" {
+						fmt.Println("Please specify a repo name")
+						return
+					}
+
+					res := deleteRepository(repoName)
+					fmt.Println(res)
 
 					return
 				},
