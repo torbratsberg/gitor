@@ -166,6 +166,7 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 
 	repoName := req.URL.Query().Get("repoName")
 
+	// Make the repo
 	repo, err := git.PlainInit(
 		path.Join(gitorConfig.Paths.Repositories, repoName+".git"),
 		true,
@@ -177,6 +178,7 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 		Branches: []string{},
 	}
 
+	// Create origin remote
 	remote, err := repo.CreateRemote(&config.RemoteConfig{
 		Name: "origin",
 		URLs: []string{
@@ -192,6 +194,14 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 	})
 	check(err)
 
+	// Chown the repo so we can push to it
+	err = os.Chown(
+		path.Join(gitorConfig.Paths.Repositories, repoName+".git"),
+		os.Getuid(),
+		os.Getgid(),
+	)
+
+	// Add the remote to repoRes
 	remoteString := remote.String()
 	remoteList := strings.Split(remoteString, "\n")
 	repoRes.Remotes = append(repoRes.Remotes, remoteList...)
