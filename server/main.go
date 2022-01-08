@@ -169,10 +169,11 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 	}
 
 	repoName := req.URL.Query().Get("repoName")
+	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName+".git")
 
 	// Make the repo
 	repo, err := git.PlainInit(
-		path.Join(gitorConfig.Paths.Repositories, repoName+".git"),
+		repoPath,
 		true,
 	)
 	check(err)
@@ -191,7 +192,7 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 				gitorConfig.Server.User,
 				gitorConfig.Server.Address,
 				gitorConfig.Server.SSHPort,
-				path.Join(gitorConfig.Paths.Repositories, repoName+".git"),
+				repoPath,
 			),
 		},
 		Fetch: []config.RefSpec{},
@@ -200,6 +201,7 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 
 	// Chown the repo
 	// TODO: Can we avoid this?
+	os.Chown(repoPath, os.Getuid(), os.Getgid())
 	cmd := exec.Command(
 		"bash",
 		"-c",
@@ -207,7 +209,7 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 			"chown -R %s:%s %s",
 			gitorConfig.Server.User,
 			gitorConfig.Server.User,
-			path.Join(gitorConfig.Paths.Repositories, repoName+".git"),
+			repoPath,
 		),
 	)
 	err = cmd.Run()

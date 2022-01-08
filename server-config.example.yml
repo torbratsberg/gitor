@@ -1,0 +1,11 @@
+paths:
+  repositories: "/home/git/gitor/repos/"
+server:
+  port: "5000"
+  tokenwhitelist:
+    - "yourPassword"
+    - "anotherPassword"
+  sshport: "22"
+  address: "127.0.0.1"
+  user: "git"
+

@@ -34,9 +34,9 @@ var colorCyan string = "\033[36m"
 
 type ClientConfig struct {
 	RemoteServer struct {
-		IP    string `yaml:"ip"`
-		Port  string `yaml:"port"`
-		Token string `yaml:"token"`
+		Address string `yaml:"address"`
+		Port    string `yaml:"port"`
+		Token   string `yaml:"token"`
 	}
 }
 
@@ -148,7 +148,7 @@ func requestAndParse(req *http.Request) []byte {
 func getRepositories(search string) (result []string) {
 	url := fmt.Sprintf(
 		"http://%s:%s/%s",
-		gitorConfig.RemoteServer.IP,
+		gitorConfig.RemoteServer.Address,
 		gitorConfig.RemoteServer.Port,
 		"get_repositories",
 	)
@@ -173,7 +173,7 @@ func getRepository(repoName string) (result Repo) {
 
 	url := fmt.Sprintf(
 		"http://%s:%s/%s?%s",
-		gitorConfig.RemoteServer.IP,
+		gitorConfig.RemoteServer.Address,
 		gitorConfig.RemoteServer.Port,
 		"get_repository",
 		fmt.Sprintf("repoName=%s", repoName),
@@ -193,7 +193,7 @@ func getRepository(repoName string) (result Repo) {
 func newRepository(repoName string) (result Repo) {
 	url := fmt.Sprintf(
 		"http://%s:%s/%s?%s",
-		gitorConfig.RemoteServer.IP,
+		gitorConfig.RemoteServer.Address,
 		gitorConfig.RemoteServer.Port,
 		"new_repository",
 		fmt.Sprintf("repoName=%s", repoName),
@@ -221,7 +221,7 @@ func deleteRepository(repoName string) (result string) {
 
 	url := fmt.Sprintf(
 		"http://%s:%s/%s?%s",
-		gitorConfig.RemoteServer.IP,
+		gitorConfig.RemoteServer.Address,
 		gitorConfig.RemoteServer.Port,
 		"delete_repository",
 		fmt.Sprintf("repoName=%s", repoName),
