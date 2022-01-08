@@ -122,7 +122,7 @@ func getRepository(res http.ResponseWriter, req *http.Request) {
 	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName)
 
 	// Check if the directory exists and is a repo
-	if _, err := os.Stat(path.Join(repoPath, "/.git")); os.IsNotExist(err) {
+	if _, err := os.Stat(repoPath + ".git"); os.IsNotExist(err) {
 		res.WriteHeader(http.StatusNotFound)
 		res.Write([]byte("404 Not Found"))
 		return
