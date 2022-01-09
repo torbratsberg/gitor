@@ -25,14 +25,14 @@ type Repo struct {
 
 type ServerConfig struct {
 	Paths struct {
-		Repositories string `yaml:repositories`
+		Repositories string `yaml:"repositories"`
 	}
 	Server struct {
-		Port           string   `yaml:port`
-		TokenWhitelist []string `yaml:tokenWhitelist`
-		SSHPort        string   `yaml:sshPort`
-		Address        string   `yaml:address`
-		User           string   `yaml:user`
+		Port           string   `yaml:"port"`
+		TokenWhitelist []string `yaml:"tokenWhitelist"`
+		SSHPort        string   `yaml:"sshPort"`
+		Address        string   `yaml:"address"`
+		User           string   `yaml:"user"`
 	}
 }
 
