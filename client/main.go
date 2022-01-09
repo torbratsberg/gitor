@@ -101,9 +101,12 @@ func encodeToken() string {
 }
 
 func makeUrl(URLPath string, params []Parameter) (url string) {
-	url = "http://"
-	url += gitorConfig.RemoteServer.Address + ":"
-	url += gitorConfig.RemoteServer.Port + path.Join("/"+URLPath)
+	url = fmt.Sprintf(
+		"http://%s:%s/%s",
+		gitorConfig.RemoteServer.Address,
+		gitorConfig.RemoteServer.Port,
+		URLPath,
+	)
 	if len(params) > 0 && params != nil {
 		url += "?"
 		for i := range params {
