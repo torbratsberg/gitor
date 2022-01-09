@@ -115,6 +115,26 @@ func encodeToken() string {
 	)
 }
 
+type Parameter struct {
+	Key   string
+	Value string
+}
+
+func makeUrl(URLPath string, params []Parameter) (url string) {
+	url = "http://"
+	url += gitorConfig.RemoteServer.Address + ":"
+	url += gitorConfig.RemoteServer.Port + path.Join("/"+URLPath)
+	if len(params) > 0 && params != nil {
+		url += "?"
+		for i := range params {
+			url += params[i].Key + "=" + params[i].Value
+			url += "&"
+		}
+	}
+
+	return
+}
+
 func requestAndParse(req *http.Request) []byte {
 	// Do the request
 	res, err := client.Do(req)
@@ -142,20 +162,18 @@ func requestAndParse(req *http.Request) []byte {
 	body, err := ioutil.ReadAll(res.Body)
 	check(err)
 
+	res.Body.Close()
+
 	return body
 }
 
 func getRepositories(search string) (result []string) {
-	url := fmt.Sprintf(
-		"http://%s:%s/%s",
-		gitorConfig.RemoteServer.Address,
-		gitorConfig.RemoteServer.Port,
-		"get_repositories",
-	)
-
+	params := []Parameter{}
 	if search != "" {
-		url += fmt.Sprintf("?search=%s", search)
+		params = []Parameter{{Key: "search", Value: search}}
 	}
+
+	url := makeUrl("get_repositories", params)
 
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", encodeToken())
@@ -170,14 +188,9 @@ func getRepositories(search string) (result []string) {
 }
 
 func getRepository(repoName string) (result Repo) {
+	params := []Parameter{{Key: "repoName", Value: repoName}}
+	url := makeUrl("get_repository", params)
 
-	url := fmt.Sprintf(
-		"http://%s:%s/%s?%s",
-		gitorConfig.RemoteServer.Address,
-		gitorConfig.RemoteServer.Port,
-		"get_repository",
-		fmt.Sprintf("repoName=%s", repoName),
-	)
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", encodeToken())
 	check(err)
@@ -191,13 +204,9 @@ func getRepository(repoName string) (result Repo) {
 }
 
 func newRepository(repoName string) (result Repo) {
-	url := fmt.Sprintf(
-		"http://%s:%s/%s?%s",
-		gitorConfig.RemoteServer.Address,
-		gitorConfig.RemoteServer.Port,
-		"new_repository",
-		fmt.Sprintf("repoName=%s", repoName),
-	)
+	params := []Parameter{{Key: "repoName", Value: repoName}}
+	url := makeUrl("new_repository", params)
+
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", encodeToken())
 	check(err)
@@ -219,13 +228,8 @@ func deleteRepository(repoName string) (result string) {
 		return "Aborted"
 	}
 
-	url := fmt.Sprintf(
-		"http://%s:%s/%s?%s",
-		gitorConfig.RemoteServer.Address,
-		gitorConfig.RemoteServer.Port,
-		"delete_repository",
-		fmt.Sprintf("repoName=%s", repoName),
-	)
+	params := []Parameter{{Key: "repoName", Value: repoName}}
+	url := makeUrl("delete_repository", params)
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", encodeToken())
 	check(err)
