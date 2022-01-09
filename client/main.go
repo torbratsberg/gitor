@@ -22,16 +22,6 @@ var client = &http.Client{
 	Jar:           nil,
 }
 
-var colorReset string = "\033[0m"
-var colorGreen string = "\033[32m"
-var colorYellow string = "\033[33m"
-var colorCyan string = "\033[36m"
-
-// colorPurple := "\033[35m"
-// colorRed := "\033[31m"
-// colorBlue := "\033[34m"
-// colorWhite := "\033[37m"
-
 type ClientConfig struct {
 	RemoteServer struct {
 		Address string `yaml:"address"`
@@ -44,6 +34,11 @@ type Repo struct {
 	Name     string
 	Branches []string
 	Remotes  []string
+}
+
+type Parameter struct {
+	Key   string
+	Value string
 }
 
 func check(err error) {
@@ -82,42 +77,27 @@ var gitorConfig ClientConfig = *getConfig()
 
 func printRepoInfo(repo Repo) {
 	// Print repo name
-	fmt.Printf("%s%s\n", colorGreen, repo.Name)
+	fmt.Println(repo.Name)
 
 	// Print branches
-	fmt.Printf("\n%s%sBranches:\n", colorYellow, strings.Repeat(" ", 2))
+	fmt.Printf("\n  Branches:\n")
 	for i := range repo.Branches {
-		fmt.Printf(colorCyan)
-		fmt.Printf("    %s\n", repo.Branches[i])
+		fmt.Printf("    ")
+		fmt.Println(repo.Branches[i])
 	}
 
 	// Print remotes
-	fmt.Printf("\n%s%sRemotes:\n", colorYellow, strings.Repeat(" ", 2))
+	fmt.Printf("\n  Remotes:\n")
 	for i := range repo.Remotes {
-		fmt.Printf(colorCyan)
-		fmt.Printf(
-			"    %s\n",
-			strings.Replace(
-				repo.Remotes[i],
-				"\t",
-				": ",
-				1,
-			),
-		)
+		fmt.Printf("    ")
+		fmt.Println(repo.Remotes[i])
 	}
-
-	fmt.Println(colorReset)
 }
 
 func encodeToken() string {
 	return base64.URLEncoding.EncodeToString(
 		[]byte(gitorConfig.RemoteServer.Token),
 	)
-}
-
-type Parameter struct {
-	Key   string
-	Value string
 }
 
 func makeUrl(URLPath string, params []Parameter) (url string) {
@@ -251,11 +231,6 @@ func main() {
 		Usage:       "Git repo manager",
 		Version:     "0.1.0",
 		Description: "CLI Tool to manage your bare repos on a remote server.",
-		Before: func(c *cli.Context) (err error) {
-			// Add some space above our output
-			fmt.Printf("\n")
-			return
-		},
 		Commands: []*cli.Command{
 			{
 				Name:    "list",
@@ -274,10 +249,9 @@ func main() {
 				Action: func(c *cli.Context) (err error) {
 					repos := getRepositories(search)
 
-					fmt.Printf("%sRepositories:\n", colorYellow)
+					fmt.Printf("Repositories:\n")
 					for i := range repos {
 						fmt.Printf(strings.Repeat(" ", 2))
-						fmt.Printf(colorCyan)
 
 						// Regex away the .git suffix
 						fmt.Println(
@@ -287,7 +261,6 @@ func main() {
 							),
 						)
 					}
-					fmt.Printf(colorReset)
 					return
 				},
 			},
