@@ -172,10 +172,7 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 	repoPath := path.Join(gitorConfig.Paths.Repositories, repoName+".git")
 
 	// Make the repo
-	repo, err := git.PlainInit(
-		repoPath,
-		true,
-	)
+	repo, err := git.PlainInit(repoPath, true)
 	check(err)
 
 	repoRes := Repo{
@@ -226,7 +223,7 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 
 func deleteRepository(res http.ResponseWriter, req *http.Request) {
 	if !validateToken(req.Header.Get("Authorization")) {
-		res.WriteHeader(http.StatusInternalServerError)
+		res.WriteHeader(http.StatusUnauthorized)
 		res.Write([]byte("401 Unauthorized"))
 		return
 	}
