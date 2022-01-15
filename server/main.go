@@ -30,7 +30,7 @@ type ServerConfig struct {
 	}
 	Server struct {
 		Port           string   `yaml:"port"`
-		TokenWhitelist []string `yaml:"tokenWhitelist"`
+		TokenWhitelist []string `yaml:"tokenwhitelist"`
 		SSHPort        string   `yaml:"sshPort"`
 		Address        string   `yaml:"address"`
 		User           string   `yaml:"user"`
