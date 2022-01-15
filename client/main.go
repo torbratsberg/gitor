@@ -34,6 +34,7 @@ type Repo struct {
 	Name     string
 	Branches []string
 	Remotes  []string
+	Tags     []map[string]string
 }
 
 type Parameter struct {
@@ -91,6 +92,17 @@ func printRepoInfo(repo Repo) {
 	for i := range repo.Remotes {
 		fmt.Printf("    ")
 		fmt.Println(repo.Remotes[i])
+	}
+
+	// Print tags
+	fmt.Printf("\n  Tags:\n")
+	for i := range repo.Tags {
+		fmt.Printf("    ")
+		fmt.Printf(
+			"%s: %s\n",
+			repo.Tags[i]["hash"],
+			repo.Tags[i]["name"],
+		)
 	}
 }
 
