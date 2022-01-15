@@ -85,7 +85,7 @@ func validateToken(token string) bool {
 
 func getRepositories(res http.ResponseWriter, req *http.Request) {
 	if !validateToken(req.Header.Get("Authorization")) {
-		res.WriteHeader(http.StatusInternalServerError)
+		res.WriteHeader(http.StatusUnauthorized)
 		res.Write([]byte("401 Unauthorized"))
 		return
 	}
@@ -163,7 +163,7 @@ func getRepository(res http.ResponseWriter, req *http.Request) {
 
 func newRepository(res http.ResponseWriter, req *http.Request) {
 	if !validateToken(req.Header.Get("Authorization")) {
-		res.WriteHeader(http.StatusInternalServerError)
+		res.WriteHeader(http.StatusUnauthorized)
 		res.Write([]byte("401 Unauthorized"))
 		return
 	}
