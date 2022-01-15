@@ -21,6 +21,7 @@ type Repo struct {
 	Name     string
 	Branches []string
 	Remotes  []string
+	Tags     []map[string]string
 }
 
 type ServerConfig struct {
@@ -156,6 +157,20 @@ func getRepository(res http.ResponseWriter, req *http.Request) {
 		remoteList := strings.Split(remote, "\n")
 		repoRes.Remotes = append(repoRes.Remotes, remoteList...)
 	}
+
+	// Get all the tags
+	refsIter, err := repo.Tags()
+	check(err)
+	refsIter.ForEach(func(r *plumbing.Reference) error {
+		repoRes.Tags = append(
+			repoRes.Tags,
+			map[string]string{
+				"name": r.Name().String(),
+				"hash": r.Hash().String(),
+			},
+		)
+		return nil
+	})
 
 	encode := json.NewEncoder(res)
 	encode.Encode(repoRes)
