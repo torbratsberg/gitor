@@ -31,10 +31,11 @@ type ClientConfig struct {
 }
 
 type Repo struct {
-	Name     string
-	Branches []string
-	Remotes  []string
-	Tags     []map[string]string
+	Name        string
+	Branches    []string
+	Remotes     []string
+	Tags        []map[string]string
+	CommitCount int
 }
 
 type Parameter struct {
@@ -77,33 +78,42 @@ func getConfig() (cfg *ClientConfig) {
 var gitorConfig ClientConfig = *getConfig()
 
 func printRepoInfo(repo Repo) {
+	res := ""
+
 	// Print repo name
-	fmt.Println(repo.Name)
+	res += repo.Name + "\n"
+
+	// Print commit count
+	res += fmt.Sprintf("\n  Commit count: %d\n", repo.CommitCount)
 
 	// Print branches
-	fmt.Printf("\n  Branches:\n")
+	res += "\n  Branches:\n"
 	for i := range repo.Branches {
-		fmt.Printf("    ")
-		fmt.Println(repo.Branches[i])
+		res += "    "
+		res += repo.Branches[i] + "\n"
 	}
 
 	// Print remotes
-	fmt.Printf("\n  Remotes:\n")
+	res += "\n  Remotes:\n"
 	for i := range repo.Remotes {
-		fmt.Printf("    ")
-		fmt.Println(repo.Remotes[i])
+		res += "    "
+		res += repo.Remotes[i] + "\n"
 	}
 
 	// Print tags
-	fmt.Printf("\n  Tags:\n")
-	for i := range repo.Tags {
-		fmt.Printf("    ")
-		fmt.Printf(
-			"%s: %s\n",
-			repo.Tags[i]["hash"],
-			repo.Tags[i]["name"],
-		)
+	if len(repo.Tags) > 0 {
+		res += "\n  Tags:\n"
+		for i := range repo.Tags {
+			res += "    "
+			res += fmt.Sprintf(
+				"%s: %s\n",
+				repo.Tags[i]["hash"],
+				repo.Tags[i]["name"],
+			)
+		}
 	}
+
+	fmt.Println(res)
 }
 
 func encodeToken() string {

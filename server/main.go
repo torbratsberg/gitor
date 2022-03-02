@@ -14,14 +14,16 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-yaml/yaml"
 )
 
 type Repo struct {
-	Name     string
-	Branches []string
-	Remotes  []string
-	Tags     []map[string]string
+	Name        string
+	Branches    []string
+	Remotes     []string
+	Tags        []map[string]string
+	CommitCount int
 }
 
 type ServerConfig struct {
@@ -169,6 +171,13 @@ func getRepository(res http.ResponseWriter, req *http.Request) {
 				"hash": r.Hash().String(),
 			},
 		)
+		return nil
+	})
+
+	// Get the commit count
+	commits, err := repo.CommitObjects()
+	commits.ForEach(func(obj *object.Commit) error {
+		repoRes.CommitCount++
 		return nil
 	})
 
