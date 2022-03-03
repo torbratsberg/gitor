@@ -16,6 +16,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const ErrorMissingRepoName = "Please specify a repo name"
+
 var client = &http.Client{
 	Transport:     nil,
 	CheckRedirect: nil,
@@ -296,7 +298,7 @@ func main() {
 				Action: func(c *cli.Context) (err error) {
 					repoName := c.Args().First()
 					if repoName == "" {
-						fmt.Println("Please specify a repo name")
+						fmt.Println(ErrorMissingRepoName)
 						return
 					}
 
@@ -313,7 +315,7 @@ func main() {
 				Action: func(c *cli.Context) (err error) {
 					repoName := c.Args().First()
 					if repoName == "" {
-						fmt.Println("Please specify a repo name")
+						fmt.Println(ErrorMissingRepoName)
 						return
 					}
 
@@ -330,7 +332,7 @@ func main() {
 				Action: func(c *cli.Context) (err error) {
 					repoName := c.Args().First()
 					if repoName == "" {
-						fmt.Println("Please specify a repo name")
+						fmt.Println(ErrorMissingRepoName)
 						return
 					}
 
