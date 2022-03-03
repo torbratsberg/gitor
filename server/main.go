@@ -223,7 +223,6 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 	check(err)
 
 	// Chown the repo
-	// TODO: Can we avoid this?
 	os.Chown(repoPath, os.Getuid(), os.Getgid())
 	cmd := exec.Command(
 		"bash",
