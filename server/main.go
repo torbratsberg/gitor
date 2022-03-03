@@ -18,6 +18,8 @@ import (
 	"github.com/go-yaml/yaml"
 )
 
+const Error401 = "401 Unauthorized"
+
 type Repo struct {
 	Name        string
 	Branches    []string
@@ -89,7 +91,7 @@ func validateToken(token string) bool {
 func getRepositories(res http.ResponseWriter, req *http.Request) {
 	if !validateToken(req.Header.Get("Authorization")) {
 		res.WriteHeader(http.StatusUnauthorized)
-		res.Write([]byte("401 Unauthorized"))
+		res.Write([]byte(Error401))
 		return
 	}
 
@@ -120,7 +122,7 @@ func getRepositories(res http.ResponseWriter, req *http.Request) {
 func getRepository(res http.ResponseWriter, req *http.Request) {
 	if !validateToken(req.Header.Get("Authorization")) {
 		res.WriteHeader(http.StatusUnauthorized)
-		res.Write([]byte("401 Unauthorized"))
+		res.Write([]byte(Error401))
 		return
 	}
 
@@ -188,7 +190,7 @@ func getRepository(res http.ResponseWriter, req *http.Request) {
 func newRepository(res http.ResponseWriter, req *http.Request) {
 	if !validateToken(req.Header.Get("Authorization")) {
 		res.WriteHeader(http.StatusUnauthorized)
-		res.Write([]byte("401 Unauthorized"))
+		res.Write([]byte(Error401))
 		return
 	}
 
@@ -248,7 +250,7 @@ func newRepository(res http.ResponseWriter, req *http.Request) {
 func deleteRepository(res http.ResponseWriter, req *http.Request) {
 	if !validateToken(req.Header.Get("Authorization")) {
 		res.WriteHeader(http.StatusUnauthorized)
-		res.Write([]byte("401 Unauthorized"))
+		res.Write([]byte(Error401))
 		return
 	}
 
